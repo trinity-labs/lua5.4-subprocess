@@ -117,7 +117,7 @@ static int read_line(lua_State *L, FILE *f)
         char *p = luaL_prepbuffer(&b);
         if (fgets(p, LUAL_BUFFERSIZE, f) == NULL) {  /* eof? */
             luaL_pushresult(&b);  /* close buffer */
-            return (lua_objlen(L, -1) > 0);  /* check whether read something */
+            return (lua_rawlen(L, -1) > 0);  /* check whether read something */
         }
         l = strlen(p);
         if (l == 0 || p[l-1] != '\n')
@@ -145,7 +145,7 @@ static int read_chars(lua_State *L, FILE *f, size_t n)
         n -= nr;  /* still have to read `n' chars */
     } while (n > 0 && nr == rlen);  /* until end of count or eof */
     luaL_pushresult(&b);  /* close buffer */
-    return (n == 0 || lua_objlen(L, -1) > 0);
+    return (n == 0 || lua_rawlen(L, -1) > 0);
 }
 
 static int g_read(lua_State *L, FILE *f, int first)
@@ -294,7 +294,7 @@ static void createmeta(lua_State *L)
     luaL_newmetatable(L, LUA_FILEHANDLE);  /* create metatable for file handles */
     lua_pushvalue(L, -1);  /* push metatable */
     lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
-    luaL_register(L, NULL, flib);  /* file methods */
+    luaL_setfuncs(L, flib, 0);  /* file methods */
 }
 
 #else /* #ifndef SHARE_LIOLIB */
@@ -315,7 +315,7 @@ FILE *liolib_copy_tofile(lua_State *L, int index)
     if (lua_type(L, index) != LUA_TTABLE) return NULL;
     lua_getmetatable(L, index);
     luaL_getmetatable(L, LUA_FILEHANDLE);
-    eq = lua_equal(L, -2, -1);
+    eq = lua_compare(L, -2, -1, LUA_OPEQ);
     lua_pop(L, 2);
     if (!eq) return NULL;
     return *(FILE **) lua_touserdata(L, index);

@@ -130,7 +130,7 @@ static struct proc *toproc(lua_State *L, int index)
     if (lua_type(L, index) != LUA_TUSERDATA) return NULL;
     lua_getmetatable(L, index);
     luaL_getmetatable(L, SP_PROC_META);
-    eq = lua_equal(L, -2, -1);
+    eq = lua_compare(L, -2, -1, LUA_OPEQ);
     lua_pop(L, 2);
     if (!eq) return NULL;
     return lua_touserdata(L, index);
@@ -148,7 +148,7 @@ static struct proc *newproc(lua_State *L)
     luaL_getmetatable(L, SP_PROC_META);
     lua_setmetatable(L, -2);
     lua_newtable(L);
-    lua_setfenv(L, -2);
+    lua_setuservalue(L, -2);
     return proc;
 }
 
@@ -171,7 +171,7 @@ static void doneproc(lua_State *L, int index)
             lua_pushinteger(L, proc->pid);      /* stack: proc list pid */
             lua_pushvalue(L, -1);               /* stack: proc list pid pid */
             lua_gettable(L, -3);                /* stack: proc list pid proc2 */
-            if (!lua_equal(L, -4, -1)){
+            if (!lua_compare(L, -4, -1, LUA_OPEQ)){
                 /* lookup by pid didn't work */
                 fputs("subprocess.c: doneproc: XXX: pid lookup in SP_LIST failed\n", stderr);
                 lua_pop(L, 2);                  /* stack: proc list */
@@ -756,7 +756,7 @@ static int superpopen(lua_State *L)
        and Lua can garbage-collect them later. */
     
     /* get arguments */
-    nargs = lua_objlen(L, 1);
+    nargs = lua_rawlen(L, 1);
     if (nargs == 0) return luaL_error(L, "no arguments specified");
     args = lua_newuserdata(L, (nargs + 1) * sizeof *args); /*alloc((nargs + 1) * sizeof *args);*/
     if (!args) return luaL_error(L, "memory full");
@@ -891,7 +891,7 @@ files_failure:
     }
 
     /* Put pipe objects in proc userdata's environment */
-    lua_getfenv(L, 2);
+    lua_getuservalue(L, 2);
     for (i=0; i<3; ++i){
         if (pipe_ends[i]){
             *liolib_copy_newfile(L) = pipe_ends[i];
@@ -942,7 +942,7 @@ static int proc_index(lua_State *L)
     lua_settop(L, 2);
     proc = checkproc(L, 1);
     /* first check environment table */
-    lua_getfenv(L, 1);
+    lua_getuservalue(L, 1);
     lua_pushvalue(L, 2);
     lua_gettable(L, 3);
     if (!lua_isnil(L, 4)) return 1;
@@ -1316,7 +1316,10 @@ LUALIB_API int luaopen_subprocess(lua_State *L)
     lua_rawseti(L, -2, SP_LIST);
     lua_replace(L, LUA_ENVIRONINDEX);
 
-    luaL_register(L, "subprocess", subprocess);
+    lua_newtable(L);
+    luaL_setfuncs(L, subprocess, 0);
+    lua_pushvalue(L, -1);
+    lua_setglobal(L, "subprocess");
 
     /* export PIPE and STDOUT constants */
     lua_pushlightuserdata(L, &PIPE);
@@ -1326,7 +1329,7 @@ LUALIB_API int luaopen_subprocess(lua_State *L)
 
     /* create metatable for proc objects */
     luaL_newmetatable(L, SP_PROC_META);
-    luaL_register(L, NULL, proc_meta);
+    luaL_setfuncs(L, proc_meta, 0);
     lua_pushboolean(L, 0);
     lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
