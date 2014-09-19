@@ -106,7 +106,7 @@ struct proc {
    used for the `subprocess.wait` function.
    On POSIX, it is used to get the proc object corresponding to a pid. On
    Windows, it is used to assemble a HANDLE array for WaitForMultipleObjects. */
-#define SP_LIST 1
+static int SP_LIST;
 
 /* Function to count number of keys in a table.
    Table must be at top of stack. */
@@ -163,7 +163,8 @@ static void doneproc(lua_State *L, int index)
         /* remove proc from SP_LIST */
         lua_checkstack(L, 4);
         lua_pushvalue(L, index);    /* stack: proc */
-        lua_rawgeti(L, LUA_ENVIRONINDEX, SP_LIST);
+        lua_pushlightuserdata(L, &SP_LIST);
+        lua_rawget(L, LUA_REGISTRYINDEX);
         /* stack: proc list */
         if (lua_isnil(L, -1)){
             fputs("subprocess.c: XXX: SP_LIST IS NIL\n", stderr);
@@ -193,7 +194,8 @@ static int prune(lua_State *L)
 {
     int top = lua_gettop(L);
     lua_checkstack(L, 5);
-    lua_rawgeti(L, LUA_ENVIRONINDEX, SP_LIST);
+    lua_pushlightuserdata(L, &SP_LIST);
+    lua_rawget(L, LUA_REGISTRYINDEX);
     if (lua_isnil(L, -1)){
         lua_pop(L, 1);
         return 0;
@@ -901,7 +903,8 @@ files_failure:
     lua_pop(L, 1);
 
     /* Put proc object in SP_LIST table */
-    lua_rawgeti(L, LUA_ENVIRONINDEX, SP_LIST);
+    lua_pushlightuserdata(L, &SP_LIST);
+    lua_rawget(L, LUA_REGISTRYINDEX);
     if (lua_isnil(L, -1)){
         fputs("subprocess.c: XXX: SP_LIST IS NIL\n", stderr);
     } else {
@@ -1192,7 +1195,8 @@ static int superwait(lua_State *L)
     DWORD exitcode;
 #endif
 
-    lua_rawgeti(L, LUA_ENVIRONINDEX, SP_LIST);
+    lua_pushlightuserdata(L, &SP_LIST);
+    lua_rawget(L, LUA_REGISTRYINDEX);
     if (lua_isnil(L, -1))
         return luaL_error(L, "SP_LIST is nil");
 #if defined(OS_POSIX)
@@ -1310,11 +1314,10 @@ static const luaL_Reg subprocess[] = {
 
 LUALIB_API int luaopen_subprocess(lua_State *L)
 {
-    /* create environment table for C functions */
-    lua_createtable(L, 1, 0);
+    /* create a table for C functions in the registry */
+    lua_pushlightuserdata(L, &SP_LIST);
     lua_newtable(L);   /* table for all proc objects */
-    lua_rawseti(L, -2, SP_LIST);
-    lua_replace(L, LUA_ENVIRONINDEX);
+    lua_rawset(L, LUA_REGISTRYINDEX);
 
     lua_newtable(L);
     luaL_setfuncs(L, subprocess, 0);
