@@ -322,6 +322,7 @@ static void createmeta(lua_State *L)
 
 #else /* #ifndef SHARE_LIOLIB */
 
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
 static int io_fclose(lua_State *L)
 {
     FILE **p = luaL_checkudata(L, 1, LUA_FILEHANDLE);
@@ -329,6 +330,15 @@ static int io_fclose(lua_State *L)
     *p = NULL;
     return pushresult(L, ok, NULL);
 }
+#else // #ifdef SHARE_LIOLIB || !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
+typedef luaL_Stream LStream;
+#define tolstream(L)	((LStream *)luaL_checkudata(L, 1, LUA_FILEHANDLE))
+static int io_fclose (lua_State *L) {
+  LStream *p = tolstream(L);
+  int res = fclose(p->f);
+  return luaL_fileresult(L, (res == 0), NULL);
+}
+#endif // #ifdef SHARE_LIOLIB || !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
 
 #endif /* #ifndef SHARE_LIOLIB */
 
@@ -350,6 +360,13 @@ FILE *liolib_copy_tofile(lua_State *L, int index)
 */
 FILE **liolib_copy_newfile(lua_State *L)
 {
+#if defined(SHARE_LIOLIB) && defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 502
+  LStream *p = (LStream *)lua_newuserdata(L, sizeof(LStream));
+  p->f = NULL;
+  p->closef = &io_fclose;
+  luaL_setmetatable(L, LUA_FILEHANDLE);
+  return p;
+#else	// #if defined(SHARE_LIOLIB) && defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 502
     FILE **pf = (FILE **)lua_newuserdata(L, sizeof(FILE *));
     *pf = NULL;  /* file handle is currently `closed' */
     luaL_getmetatable(L, LUA_FILEHANDLE);
@@ -369,4 +386,5 @@ FILE **liolib_copy_newfile(lua_State *L)
     lua_setmetatable(L, -2);
     /* leave file object on stack */
     return pf;
+#endif	// #if defined(SHARE_LIOLIB) && defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 502
 }
