@@ -9,6 +9,29 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
+/* Compatibility for Lua 5.1.
+ *
+ * luaL_setfuncs() is used to create a module table where the functions have
+ * json_config_t as their first upvalue. Code borrowed from Lua 5.2 source. */
+static void luaL_setfuncs (lua_State *l, const luaL_Reg *reg, int nup)
+{
+    int i;
+
+    luaL_checkstack(l, nup, "too many upvalues");
+    for (; reg->name != NULL; reg++) {  /* fill the table with given functions */
+        for (i = 0; i < nup; i++)  /* copy upvalues to the top */
+            lua_pushvalue(l, -nup);
+        lua_pushcclosure(l, reg->func, nup);  /* closure with those upvalues */
+        lua_setfield(l, -(nup + 2), reg->name);
+    }
+    lua_pop(l, nup);  /* remove upvalues */
+}
+# define lua_rawlen  lua_objlen
+#else
+#define lua_equal(L,idx1,idx2)  lua_compare(L,(idx1),(idx2),LUA_OPEQ)
+#endif
+
 static int pushresult(lua_State *L, int i, const char *filename)
 {
     int en = errno;  /* calls to Lua API may change this value */
@@ -315,7 +338,7 @@ FILE *liolib_copy_tofile(lua_State *L, int index)
     if (lua_type(L, index) != LUA_TTABLE) return NULL;
     lua_getmetatable(L, index);
     luaL_getmetatable(L, LUA_FILEHANDLE);
-    eq = lua_compare(L, -2, -1, LUA_OPEQ);
+    eq = lua_equal(L, -2, -1);
     lua_pop(L, 2);
     if (!eq) return NULL;
     return *(FILE **) lua_touserdata(L, index);

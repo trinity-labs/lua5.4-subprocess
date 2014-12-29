@@ -38,6 +38,30 @@
 #include "fcntl.h"
 #include "assert.h"
 #include "liolib-copy.h"
+
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
+/* Compatibility for Lua 5.1.
+ *
+ * luaL_setfuncs() is used to create a module table where the functions have
+ * json_config_t as their first upvalue. Code borrowed from Lua 5.2 source. */
+static void luaL_setfuncs (lua_State *l, const luaL_Reg *reg, int nup)
+{
+    int i;
+
+    luaL_checkstack(l, nup, "too many upvalues");
+    for (; reg->name != NULL; reg++) {  /* fill the table with given functions */
+        for (i = 0; i < nup; i++)  /* copy upvalues to the top */
+            lua_pushvalue(l, -nup);
+        lua_pushcclosure(l, reg->func, nup);  /* closure with those upvalues */
+        lua_setfield(l, -(nup + 2), reg->name);
+    }
+    lua_pop(l, nup);  /* remove upvalues */
+}
+# define lua_rawlen  lua_objlen
+#else
+#define lua_equal(L,idx1,idx2)  lua_compare(L,(idx1),(idx2),LUA_OPEQ)
+#endif
+
 #if defined(OS_POSIX)
 #include "unistd.h"
 #include "sys/wait.h"
@@ -130,7 +154,7 @@ static struct proc *toproc(lua_State *L, int index)
     if (lua_type(L, index) != LUA_TUSERDATA) return NULL;
     lua_getmetatable(L, index);
     luaL_getmetatable(L, SP_PROC_META);
-    eq = lua_compare(L, -2, -1, LUA_OPEQ);
+    eq = lua_equal(L, -2, -1);
     lua_pop(L, 2);
     if (!eq) return NULL;
     return lua_touserdata(L, index);
@@ -148,7 +172,11 @@ static struct proc *newproc(lua_State *L)
     luaL_getmetatable(L, SP_PROC_META);
     lua_setmetatable(L, -2);
     lua_newtable(L);
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
+    lua_setfenv(L, -2);
+#else
     lua_setuservalue(L, -2);
+#endif
     return proc;
 }
 
@@ -172,7 +200,7 @@ static void doneproc(lua_State *L, int index)
             lua_pushinteger(L, proc->pid);      /* stack: proc list pid */
             lua_pushvalue(L, -1);               /* stack: proc list pid pid */
             lua_gettable(L, -3);                /* stack: proc list pid proc2 */
-            if (!lua_compare(L, -4, -1, LUA_OPEQ)){
+            if (!lua_equal(L, -4, -1)){
                 /* lookup by pid didn't work */
                 fputs("subprocess.c: doneproc: XXX: pid lookup in SP_LIST failed\n", stderr);
                 lua_pop(L, 2);                  /* stack: proc list */
@@ -893,7 +921,11 @@ files_failure:
     }
 
     /* Put pipe objects in proc userdata's environment */
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
+    lua_getfenv(L, 2);
+#else
     lua_getuservalue(L, 2);
+#endif
     for (i=0; i<3; ++i){
         if (pipe_ends[i]){
             *liolib_copy_newfile(L) = pipe_ends[i];
@@ -945,7 +977,11 @@ static int proc_index(lua_State *L)
     lua_settop(L, 2);
     proc = checkproc(L, 1);
     /* first check environment table */
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
+    lua_getfenv(L, 1);
+#else
     lua_getuservalue(L, 1);
+#endif
     lua_pushvalue(L, 2);
     lua_gettable(L, 3);
     if (!lua_isnil(L, 4)) return 1;
@@ -1319,10 +1355,11 @@ LUALIB_API int luaopen_subprocess(lua_State *L)
     lua_newtable(L);   /* table for all proc objects */
     lua_rawset(L, LUA_REGISTRYINDEX);
 
-    lua_newtable(L);
-    luaL_setfuncs(L, subprocess, 0);
-    lua_pushvalue(L, -1);
-    lua_setglobal(L, "subprocess");
+#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
+    luaL_register(L, "subprocess", subprocess);
+#else
+    luaL_newlib(L,subprocess);
+#endif
 
     /* export PIPE and STDOUT constants */
     lua_pushlightuserdata(L, &PIPE);
