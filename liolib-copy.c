@@ -4,36 +4,10 @@
 #include "stdlib.h"
 #include "string.h"
 
-#define LUA_COMPAT_APIINTCASTS
-#define LUA_COMPAT_MODULE
 #define LUA_LIB
-
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
-
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
-/* Compatibility for Lua 5.1.
- *
- * luaL_setfuncs() is used to create a module table where the functions have
- * json_config_t as their first upvalue. Code borrowed from Lua 5.2 source. */
-static void luaL_setfuncs (lua_State *l, const luaL_Reg *reg, int nup)
-{
-    int i;
-
-    luaL_checkstack(l, nup, "too many upvalues");
-    for (; reg->name != NULL; reg++) {  /* fill the table with given functions */
-        for (i = 0; i < nup; i++)  /* copy upvalues to the top */
-            lua_pushvalue(l, -nup);
-        lua_pushcclosure(l, reg->func, nup);  /* closure with those upvalues */
-        lua_setfield(l, -(nup + 2), reg->name);
-    }
-    lua_pop(l, nup);  /* remove upvalues */
-}
-# define lua_rawlen  lua_objlen
-#else
-#define lua_equal(L,idx1,idx2)  lua_compare(L,(idx1),(idx2),LUA_OPEQ)
-#endif
 
 static int pushresult(lua_State *L, int i, const char *filename)
 {
@@ -117,11 +91,10 @@ static int f_lines(lua_State *L)
 ** =======================================================
 */
 
-
 static int read_number(lua_State *L, FILE *f)
 {
-    lua_Number d;
-    if (fscanf(f, LUA_NUMBER_SCAN, &d) == 1) {
+    double d;
+    if (fscanf(f, "%lf", &d) == 1) {
         lua_pushnumber(L, d);
         return 1;
     } else return 0;  /* read fails */
@@ -144,7 +117,7 @@ static int read_line(lua_State *L, FILE *f)
         char *p = luaL_prepbuffer(&b);
         if (fgets(p, LUAL_BUFFERSIZE, f) == NULL) {  /* eof? */
             luaL_pushresult(&b);  /* close buffer */
-            return (lua_rawlen(L, -1) > 0);  /* check whether read something */
+            return (lua_objlen(L, -1) > 0);  /* check whether read something */
         }
         l = strlen(p);
         if (l == 0 || p[l-1] != '\n')
@@ -172,7 +145,7 @@ static int read_chars(lua_State *L, FILE *f, size_t n)
         n -= nr;  /* still have to read `n' chars */
     } while (n > 0 && nr == rlen);  /* until end of count or eof */
     luaL_pushresult(&b);  /* close buffer */
-    return (n == 0 || lua_rawlen(L, -1) > 0);
+    return (n == 0 || lua_objlen(L, -1) > 0);
 }
 
 static int g_read(lua_State *L, FILE *f, int first)
@@ -277,7 +250,7 @@ static int f_seek(lua_State *L)
     static const char *const modenames[] = {"set", "cur", "end", NULL};
     FILE *f = tofile(L);
     int op = luaL_checkoption(L, 2, "cur", modenames);
-    long offset = luaL_optlong(L, 3, 0);
+    long offset = luaL_optinteger(L, 3, 0);
     op = fseek(f, offset, mode[op]);
     if (op)
         return pushresult(L, 0, NULL);  /* error */
@@ -321,12 +294,15 @@ static void createmeta(lua_State *L)
     luaL_newmetatable(L, LUA_FILEHANDLE);  /* create metatable for file handles */
     lua_pushvalue(L, -1);  /* push metatable */
     lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
-    luaL_setfuncs(L, flib, 0);  /* file methods */
+#if LUA_VERSION_NUM >= 502
+    luaL_setfuncs(L, flib, 0);
+#else
+    luaL_register(L, NULL, flib);  /* file methods */
+#endif
 }
 
 #else /* #ifndef SHARE_LIOLIB */
 
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
 static int io_fclose(lua_State *L)
 {
     FILE **p = luaL_checkudata(L, 1, LUA_FILEHANDLE);
@@ -334,22 +310,14 @@ static int io_fclose(lua_State *L)
     *p = NULL;
     return pushresult(L, ok, NULL);
 }
-#else // #ifdef SHARE_LIOLIB || !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
-typedef luaL_Stream LStream;
-#define tolstream(L)	((LStream *)luaL_checkudata(L, 1, LUA_FILEHANDLE))
-static int io_fclose (lua_State *L) {
-  LStream *p = tolstream(L);
-  int res = fclose(p->f);
-  return luaL_fileresult(L, (res == 0), NULL);
-}
-#endif // #ifdef SHARE_LIOLIB || !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
 
 #endif /* #ifndef SHARE_LIOLIB */
 
 FILE *liolib_copy_tofile(lua_State *L, int index)
 {
     int eq;
-    if (0 == lua_getmetatable(L, index)) return NULL;
+    if (lua_type(L, index) != LUA_TTABLE) return NULL;
+    lua_getmetatable(L, index);
     luaL_getmetatable(L, LUA_FILEHANDLE);
     eq = lua_equal(L, -2, -1);
     lua_pop(L, 2);
@@ -364,13 +332,6 @@ FILE *liolib_copy_tofile(lua_State *L, int index)
 */
 FILE **liolib_copy_newfile(lua_State *L)
 {
-#if defined(SHARE_LIOLIB) && defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 502
-  LStream *p = (LStream *)lua_newuserdata(L, sizeof(LStream));
-  p->f = NULL;
-  p->closef = &io_fclose;
-  luaL_setmetatable(L, LUA_FILEHANDLE);
-  return p;
-#else	// #if defined(SHARE_LIOLIB) && defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 502
     FILE **pf = (FILE **)lua_newuserdata(L, sizeof(FILE *));
     *pf = NULL;  /* file handle is currently `closed' */
     luaL_getmetatable(L, LUA_FILEHANDLE);
@@ -390,5 +351,4 @@ FILE **liolib_copy_newfile(lua_State *L)
     lua_setmetatable(L, -2);
     /* leave file object on stack */
     return pf;
-#endif	// #if defined(SHARE_LIOLIB) && defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 502
 }

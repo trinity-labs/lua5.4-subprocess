@@ -1,0 +1,1034 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
+<title>lua-subprocess</title>
+<style type="text/css">
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+h5 {
+  font-size: 1.0em;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
+  padding: 0;
+  margin: 0;
+}
+pre {
+  white-space: pre-wrap;
+}
+
+#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+#email {
+}
+#revnumber, #revdate, #revremark {
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #888;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; vertical-align: text-bottom; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
+  margin-bottom: 2.5em;
+}
+
+#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+div.unbreakable { page-break-inside: avoid; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overridden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
+
+
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install();
+/*]]>*/
+</script>
+</head>
+<body class="article">
+<div id="header">
+<h1>lua-subprocess</h1>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><code>lua-subprocess</code> is a Lua module that allows you to create child processes and
+communicate with them. The API is based on Python&#8217;s subprocess
+module, but is not yet as complete.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_compatibility">Compatibility</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Tested under Windows, Linux and Wine. Needs more testing.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_building">Building</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Building lua-subprocess without the makefile is very simple. All you
+need to do is compile subprocess.c and liolib-copy.c into a shared
+object, linked against your Lua library, making sure you define either
+OS_POSIX or OS_WINDOWS, depending on your platform.</p></div>
+<div class="paragraph"><p>To save a bit of space, you can also define SHARE_LIOLIB if you&#8217;re
+certain you are compiling lua-subprocess with the same toolchain as Lua
+was compiled with (in particular, <code>FILE*</code> pointers should be
+compatible). If you are not sure, don&#8217;t use SHARE_LIOLIB, because it can
+cause crashing!</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+SHARE_LIOLIB doesn&#8217;t work in MSVC.
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre><code>gcc -fPIC -shared -DOS_POSIX -DSHARE_LIOLIB -o subprocess.so \
+    subprocess.c liolib-copy.c -llua</code></pre>
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_functions">Functions</h2>
+<div class="sectionbody">
+<div class="sect3">
+<h4 id="_subprocess_popen_arg1_arg2_8230_options_8230">subprocess.popen { arg1, arg2, &#8230;, [options&#8230;] }</h4>
+<div class="paragraph"><p>Creates a child process with the arguments arg1, arg2 etc. Options
+are table items with string keys. The valid options are:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<code>executable</code> - If set, this is used as the actual executable
+    to run, while <code>arg1</code> becomes <code>argv[0]</code> of the child process.
+    If not set, <code>arg1</code> is used as the executable name.
+</p>
+</li>
+<li>
+<p>
+<code>stdin</code>, <code>stdout</code>, <code>stderr</code> - These identify what to use
+    as the standard input/output/error files of the child process.
+    If not specified, the handle(s) from the parent process are used.
+    Each of these options can have the following types:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+<code>string</code> - the option specifies a filename that is opened
+        for reading (for stdin) or for writing (for stdout or stderr).
+</p>
+</li>
+<li>
+<p>
+<code>number</code> - specifies an open file to use. The file
+        is not closed by popen in the parent process.
+        In POSIX, this value is a file descriptor.
+        In Windows, this value is a Windows API handle.
+</p>
+</li>
+<li>
+<p>
+<code>FILE*</code> - a Lua file object can be used. This file is not
+        closed by popen in the parent process.
+    The following constants can also be used:
+</p>
+</li>
+<li>
+<p>
+<code>subprocess.PIPE</code> - a pipe is created, and the relevant end
+        is given to the child process. A Lua file object is placed in
+        the returned proc object. For stdin, the read end is given to
+        the child process and stdin is set to a writable file in the proc
+        object. For stdout or stderr, the write end is given to the child
+        process and stdout/stderr is set to a readable file in the proc
+        object.
+</p>
+</li>
+<li>
+<p>
+<code>subprocess.STDOUT</code> (only for stderr) -
+        This can be used to redirect the standard error file to the
+        standard output. This is useful if a pipe is used for stdout,
+        or for outputting both stdout and stderr to the same regular file.
+</p>
+</li>
+</ul></div>
+</li>
+<li>
+<p>
+<code>close_fds</code> <em>(boolean)</em> If true, all file descriptors (except
+    standard input, output and error) are closed after forking, but
+    before calling exec, so that the child process doesn&#8217;t inherit these
+    file descriptors. On Windows, this does nothing.
+</p>
+</li>
+<li>
+<p>
+<code>binary</code> <em>(boolean)</em> If true, binary mode is used for files returned
+    to the caller. This disables CR/LF translation. On POSIX, this does nothing.
+</p>
+</li>
+<li>
+<p>
+<code>cwd</code> <em>(string)</em> Names a directory for the child process to be
+    run in.
+<code>subprocess.popen</code> can throw Lua errors when something goes horribly
+wrong. For normal errors, however, it returns <code>nil, errormsg, errno</code> (errno
+may or may not be nil, depending on the nature of the error).
+</p>
+</li>
+</ul></div>
+<div class="sect4">
+<h5 id="_return_value">Return value</h5>
+<div class="paragraph"><p>On success, returns a proc object (see <a href="#procobj">below</a>).
+On failure, returns <code>nil, errormsg, errno</code>.</p></div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_subprocess_call_arg1_arg2_8230_options_8230">subprocess.call { arg1, arg2, &#8230;, [options&#8230;] }</h4>
+<div class="paragraph"><p>Creates a child process in the same way as <code>subprocess.popen</code> but waits
+for the child to finish executing, then sets and returns the <code>exitcode</code>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">Do not set <code>stdin</code>, <code>stdout</code> or <code>stderr</code> to <code>subprocess.PIPE</code>
+when calling <code>subprocess.call</code>, as it will deadlock when a pipe buffer
+is filled.</td>
+</tr></table>
+</div>
+<div class="sect4">
+<h5 id="_return_value_2">Return value</h5>
+<div class="paragraph"><p>Returns <code>exitcode</code>. See: <a href="#exitcode">exitcode</a>.</p></div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_subprocess_call_capture_arg1_arg2_8230_options_8230">subprocess.call_capture { arg1, arg2, &#8230;, [options&#8230;] }</h4>
+<div class="paragraph"><p>Creates a child process in the same way as <code>subprocess.popen</code> but reads
+all data from the child&#8217;s standard output and returns it. If you want to
+capture stderr as well, set <code>stderr</code> to <code>subprocess.STDOUT</code>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">Do not set <code>stderr</code> to <code>subprocess.PIPE</code>, it can deadlock.</td>
+</tr></table>
+</div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content"><code>subprocess.call_capture</code> captures all the child process&#8217;s output
+into memory, so if the child produces a huge amount of output, memory might be
+exhausted.</td>
+</tr></table>
+</div>
+<div class="sect4">
+<h5 id="_return_value_3">Return value</h5>
+<div class="paragraph"><p>Returns <code>exitcode, content</code> where <code>content</code> is a string containing the captured output.</p></div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_subprocess_wait">subprocess.wait()</h4>
+<div class="paragraph"><p>Waits for any child process to exit.</p></div>
+<div class="sect4">
+<h5 id="_return_value_4">Return value</h5>
+<div class="paragraph"><p>On success, returns <code>proc, exitcode, pid</code>. I&#8217;m not sure why you&#8217;d want the
+pid after the process has finished, though.</p></div>
+<div class="paragraph"><p>On failure, returns <code>nil, errormsg</code>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">On POSIX operating systems, <code>subprocess.wait</code> calls the <code>wait</code> system
+function. If you create child processes without using the subprocess module,
+and the <code>wait</code> system call returns a pid without a corresponding proc object,
+then the returned proc object will be <code>nil</code>.
+Furthermore, the process will be removed from the process table and the <code>waitpid</code>
+system call should not be used for that pid again.</td>
+</tr></table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="procobj">Proc objects</h2>
+<div class="sectionbody">
+<div class="sect3">
+<h4 id="_proc_pid">proc.pid</h4>
+<div class="paragraph"><p>This is set to the process identifier of the child.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">On POSIX systems, do not use this value with the <code>waitpid</code> system
+call, because you will make the subprocess module use an invalid pid
+in future system calls. In fact, the <code>wait</code> system call will have this effect
+too, so don&#8217;t use it while subprocess&#8217;s child processes are running.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_proc_stdin_proc_stdout_proc_stderr">proc.stdin, proc.stdout, proc.stderr</h4>
+<div class="paragraph"><p>These are set to file objects if the corresponding option passed to
+<code>subprocess.popen</code>, was set to <code>subprocess.PIPE</code>. Note that if
+the <code>stderr</code> option was set to <code>subprocess.STDOUT</code>,
+<code>proc.stderr</code> will not be set.</p></div>
+</div>
+<div class="sect3">
+<h4 id="exitcode">proc.exitcode</h4>
+<div class="paragraph"><p>After <code>proc:poll</code>, <code>proc:wait</code> or <code>subprocess.wait</code> discovers the child process has
+terminated, this field is set to the exit code of the child process. Before then,
+it is <code>nil</code>.
+If <code>proc.exitcode &lt; 0</code> then the child was killed by signal number
+<code>-proc.exitcode</code>.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_proc_poll">proc:poll()</h4>
+<div class="paragraph"><p>Checks if the child process has terminated. If the child process has terminated,
+this sets <code>proc.exitcode</code> and returns it. If the child process is still running,
+this returns <code>nil</code>.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_proc_wait">proc:wait()</h4>
+<div class="paragraph"><p>Waits for the child process to terminate, then sets and returns the
+<code>exitcode</code> field.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_proc_send_signal_sig_em_posix_only_em">proc:send_signal(sig) <em>(POSIX only)</em></h4>
+<div class="paragraph"><p>Sends a signal to the child process.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_proc_terminate">proc:terminate()</h4>
+<div class="paragraph"><p>Terminates the child process. On POSIX, itsends <code>SIGTERM</code>. On Windows,
+it calls TerminateProcess.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_proc_kill">proc:kill()</h4>
+<div class="paragraph"><p>Kills the child process. On POSIX, it sends <code>SIGKILL</code>. On Windows, it
+is the same as <code>proc:terminate()</code>.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_todo">TODO</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+Support of other operating systems.
+</p>
+</li>
+<li>
+<p>
+Deadlock-free way of communicating.
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated
+ 2023-03-31 20:17:31 CEST
+</div>
+</div>
+</body>
+</html>
