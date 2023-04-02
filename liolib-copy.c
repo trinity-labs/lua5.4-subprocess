@@ -4,7 +4,10 @@
 #include "stdlib.h"
 #include "string.h"
 
+#define LUA_COMPAT_APIINTCASTS
+#define LUA_COMPAT_MODULE
 #define LUA_LIB
+
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
@@ -113,6 +116,7 @@ static int f_lines(lua_State *L)
 ** READ
 ** =======================================================
 */
+
 
 static int read_number(lua_State *L, FILE *f)
 {
