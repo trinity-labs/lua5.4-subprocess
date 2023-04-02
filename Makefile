@@ -3,15 +3,16 @@
 INSTALL ?= install
 ASCIIDOC ?= asciidoc
 SOURCES := subprocess.c liolib-copy.c
-VERSION := 0.02
+VERSION := 0.020230402-r5
 DISTDIR := lua-subprocess-$(VERSION)
 DISTFILES := Makefile $(SOURCES) liolib-copy.h subprocess.txt subprocess.html
 
-lua_package := lua
-INSTALL_CMOD := $(shell pkg-config --variable=INSTALL_CMOD $(lua_package))
+LUA_PACKAGE := lua
+INSTALL_CMOD := $(shell pkg-config --variable=INSTALL_CMOD $(LUA_PACKAGE))
+
 ifeq ($(INSTALL_CMOD),)
-lua_package := lua5.1
-INSTALL_CMOD := $(shell pkg-config --variable=INSTALL_CMOD $(lua_package))
+LUA_PACKAGE := lua5.4
+INSTALL_CMOD := $(shell pkg-config --variable=INSTALL_CMOD $(LUA_PACKAGE))
 endif
 
 ifeq ($(INSTALL_CMOD),)
@@ -19,14 +20,14 @@ $(error Lua package not found)
 endif
 
 CFLAGS ?= -Wall -Wextra -pedantic -O2
-LUA_CFLAGS := $(shell pkg-config --cflags --libs $(lua_package))
+LUA_CFLAGS := $(shell pkg-config --cflags $(LUA_PACKAGE))
 
 .PHONY: all
 all: subprocess.so subprocess.html
 
 subprocess.so: $(SOURCES)
-	$(CC) $(CFLAGS) $(LUA_CFLAGS) -DOS_POSIX -shared -fPIC -o $@ $(SOURCES)
-
+	$(CC) $(CFLAGS) $(LUA_CFLAGS) -DOS_POSIX -DSHARE_LIOLIB -DLUA_COMPAT_APIINTCASTS -shared -fPIC -o $@ $(SOURCES)
+	
 subprocess.html: subprocess.txt
 	$(ASCIIDOC) $<
 
