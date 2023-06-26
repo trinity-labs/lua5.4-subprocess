@@ -1109,7 +1109,7 @@ static int proc_wait(lua_State *L)
 static int proc_send_signal(lua_State *L)
 {
     struct proc *proc = checkproc(L, 1);
-    int sig = luaL_checkint(L, 2);
+    int sig = luaL_checkinteger(L, 2);
     if (!proc->done){
         if (kill(proc->pid, sig)){
             return luaL_error(L, "kill: %s", strerror(errno));
