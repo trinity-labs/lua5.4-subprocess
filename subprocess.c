@@ -38,30 +38,6 @@
 #include "fcntl.h"
 #include "assert.h"
 #include "liolib-copy.h"
-
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
-/* Compatibility for Lua 5.1.
- *
- * luaL_setfuncs() is used to create a module table where the functions have
- * json_config_t as their first upvalue. Code borrowed from Lua 5.2 source. */
-static void luaL_setfuncs (lua_State *l, const luaL_Reg *reg, int nup)
-{
-    int i;
-
-    luaL_checkstack(l, nup, "too many upvalues");
-    for (; reg->name != NULL; reg++) {  /* fill the table with given functions */
-        for (i = 0; i < nup; i++)  /* copy upvalues to the top */
-            lua_pushvalue(l, -nup);
-        lua_pushcclosure(l, reg->func, nup);  /* closure with those upvalues */
-        lua_setfield(l, -(nup + 2), reg->name);
-    }
-    lua_pop(l, nup);  /* remove upvalues */
-}
-# define lua_rawlen  lua_objlen
-#else
-#define lua_equal(L,idx1,idx2)  lua_compare(L,(idx1),(idx2),LUA_OPEQ)
-#endif
-
 #if defined(OS_POSIX)
 #include "unistd.h"
 #include "sys/wait.h"
@@ -130,7 +106,7 @@ struct proc {
    used for the `subprocess.wait` function.
    On POSIX, it is used to get the proc object corresponding to a pid. On
    Windows, it is used to assemble a HANDLE array for WaitForMultipleObjects. */
-static int SP_LIST;
+#define SP_LIST "subprocess_pid_list"
 
 /* Function to count number of keys in a table.
    Table must be at top of stack. */
@@ -172,11 +148,7 @@ static struct proc *newproc(lua_State *L)
     luaL_getmetatable(L, SP_PROC_META);
     lua_setmetatable(L, -2);
     lua_newtable(L);
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
     lua_setfenv(L, -2);
-#else
-    lua_setuservalue(L, -2);
-#endif
     return proc;
 }
 
@@ -191,8 +163,7 @@ static void doneproc(lua_State *L, int index)
         /* remove proc from SP_LIST */
         lua_checkstack(L, 4);
         lua_pushvalue(L, index);    /* stack: proc */
-        lua_pushlightuserdata(L, &SP_LIST);
-        lua_rawget(L, LUA_REGISTRYINDEX);
+        luaL_getmetatable(L, SP_LIST);
         /* stack: proc list */
         if (lua_isnil(L, -1)){
             fputs("subprocess.c: XXX: SP_LIST IS NIL\n", stderr);
@@ -222,8 +193,7 @@ static int prune(lua_State *L)
 {
     int top = lua_gettop(L);
     lua_checkstack(L, 5);
-    lua_pushlightuserdata(L, &SP_LIST);
-    lua_rawget(L, LUA_REGISTRYINDEX);
+    luaL_getmetatable(L, SP_LIST);
     if (lua_isnil(L, -1)){
         lua_pop(L, 1);
         return 0;
@@ -786,7 +756,7 @@ static int superpopen(lua_State *L)
        and Lua can garbage-collect them later. */
     
     /* get arguments */
-    nargs = lua_rawlen(L, 1);
+    nargs = lua_objlen(L, 1);
     if (nargs == 0) return luaL_error(L, "no arguments specified");
     args = lua_newuserdata(L, (nargs + 1) * sizeof *args); /*alloc((nargs + 1) * sizeof *args);*/
     if (!args) return luaL_error(L, "memory full");
@@ -921,11 +891,7 @@ files_failure:
     }
 
     /* Put pipe objects in proc userdata's environment */
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
     lua_getfenv(L, 2);
-#else
-    lua_getuservalue(L, 2);
-#endif
     for (i=0; i<3; ++i){
         if (pipe_ends[i]){
             *liolib_copy_newfile(L) = pipe_ends[i];
@@ -935,8 +901,7 @@ files_failure:
     lua_pop(L, 1);
 
     /* Put proc object in SP_LIST table */
-    lua_pushlightuserdata(L, &SP_LIST);
-    lua_rawget(L, LUA_REGISTRYINDEX);
+    luaL_getmetatable(L, SP_LIST);
     if (lua_isnil(L, -1)){
         fputs("subprocess.c: XXX: SP_LIST IS NIL\n", stderr);
     } else {
@@ -977,11 +942,7 @@ static int proc_index(lua_State *L)
     lua_settop(L, 2);
     proc = checkproc(L, 1);
     /* first check environment table */
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
     lua_getfenv(L, 1);
-#else
-    lua_getuservalue(L, 1);
-#endif
     lua_pushvalue(L, 2);
     lua_gettable(L, 3);
     if (!lua_isnil(L, 4)) return 1;
@@ -1231,8 +1192,7 @@ static int superwait(lua_State *L)
     DWORD exitcode;
 #endif
 
-    lua_pushlightuserdata(L, &SP_LIST);
-    lua_rawget(L, LUA_REGISTRYINDEX);
+    luaL_getmetatable(L, SP_LIST);
     if (lua_isnil(L, -1))
         return luaL_error(L, "SP_LIST is nil");
 #if defined(OS_POSIX)
@@ -1350,15 +1310,17 @@ static const luaL_Reg subprocess[] = {
 
 LUALIB_API int luaopen_subprocess(lua_State *L)
 {
-    /* create a table for C functions in the registry */
-    lua_pushlightuserdata(L, &SP_LIST);
-    lua_newtable(L);   /* table for all proc objects */
-    lua_rawset(L, LUA_REGISTRYINDEX);
+    /* create environment table for C functions */
+    lua_newtable(L);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, LUA_REGISTRYINDEX, SP_LIST);
+    lua_pop(L, 1);
 
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
-    luaL_register(L, "subprocess", subprocess);
+#if LUA_VERSION_NUM >= 502
+    lua_createtable(L, 0, sizeof subprocess / sizeof *subprocess - 1);
+    luaL_setfuncs(L, subprocess, 0);
 #else
-    luaL_newlib(L,subprocess);
+    luaL_register(L, "subprocess", subprocess);
 #endif
 
     /* export PIPE and STDOUT constants */
@@ -1369,7 +1331,11 @@ LUALIB_API int luaopen_subprocess(lua_State *L)
 
     /* create metatable for proc objects */
     luaL_newmetatable(L, SP_PROC_META);
+#if LUA_VERSION_NUM >= 502
     luaL_setfuncs(L, proc_meta, 0);
+#else
+    luaL_register(L, NULL, proc_meta);
+#endif
     lua_pushboolean(L, 0);
     lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);

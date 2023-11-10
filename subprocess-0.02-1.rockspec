@@ -1,7 +1,7 @@
 package = "subprocess"
-version = "0.02-1"
+version = "0.4.0"
 source = {
-  url = "git://github.com/mildred/lua-subprocess.git"
+  url = "git://github.com/trinity-labs/lua5.4-subprocess.git"
 }
 description = {
   summary = "Subprocess module for Lua",
@@ -11,7 +11,7 @@ description = {
   license = "?"
 }
 dependencies = {
-  "lua >= 5.2"
+  "lua >= 5.4"
 }
 build = {
   type = "builtin",
