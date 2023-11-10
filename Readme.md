@@ -7,7 +7,7 @@ Tested on Alpine Linux with `musl`
 Get package on system
 
  ```css
-  $: apk add --update musl musl-dev pkgconfig asciidoc lua5.4 lua5.4-dev lua5.4-libs
+  $: apk add --update gcc musl-dev pkgconfig asciidoc lua5.4 lua5.4-dev lua5.4-libs
   ```
   
   - Set PATH for pkgconfig
@@ -42,7 +42,7 @@ Tested on Alpine Linux with `musl`
 Get package on system
 
  ```css
-  $: apk add --update musl musl-dev pkgconfig asciidoc lua5.3 lua5.3-dev lua5.3-libs
+  $: apk add --update gcc musl-dev pkgconfig asciidoc lua5.3 lua5.3-dev lua5.3-libs
   ```
   
   - Set PATH for pkgconfig
