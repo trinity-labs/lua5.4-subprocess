@@ -1,5 +1,5 @@
 package = "subprocess"
-version = "0.4.1"
+version = "0.5.5"
 source = {
   url = "git://github.com/huakim/lua-subprocess.git"
 }

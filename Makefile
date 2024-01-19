@@ -8,11 +8,11 @@ DISTDIR := lua-subprocess-$(VERSION)
 DISTFILES := Makefile $(SOURCES) liolib-copy.h subprocess.txt subprocess.html
 
 LUA_PACKAGE := lua
-INSTALL_CMOD := $(shell pkg-config --variable=INSTALL_CMOD $(LUA_PACKAGE))
+INSTALL_CMOD ?= $(shell pkg-config --variable=INSTALL_CMOD $(LUA_PACKAGE))
 
 ifeq ($(INSTALL_CMOD),)
 LUA_PACKAGE := lua5.4
-INSTALL_CMOD := $(shell pkg-config --variable=INSTALL_CMOD $(LUA_PACKAGE))
+INSTALL_CMOD ?= $(shell pkg-config --variable=INSTALL_CMOD $(LUA_PACKAGE))
 endif
 
 ifeq ($(INSTALL_CMOD),)

@@ -392,7 +392,7 @@ static int dopopen(const char *const *args,  /* program arguments with NULL sent
                    FILE *pipe_ends_out[3],   /* pipe ends are put here */
                    char errmsg_out[],        /* written to on failure */
                    size_t errmsg_len,         /* length of errmsg_out (EXCLUDING sentinel) */
-                   const char *const *envs = NULL  /* program environment variables */
+                   const char *const *envs  /* program environment variables */
                   )
 #if defined(OS_POSIX)
 {
@@ -456,7 +456,7 @@ fd_failure:
                 break;
         }
     }
-    
+    //
     /* Find executable name */
     if (!executable){
         /* use first arg */
@@ -722,6 +722,50 @@ failure:
 }
 #endif
 
+static char* concatenateStrings(const char* str1, const char* str2) {
+    // Check if both strings are not NULL
+    size_t length = strlen(str1) + strlen(str2) + 2; // +2 for '=' and null terminator
+    char* result = malloc(length * sizeof(char));
+    sprintf(result, "%s=%s", str1, str2);
+    return result;
+}
+
+static const char * getEnvs(lua_State * L){
+    int size = 0;
+    int asize = 10;
+    const char ** envs = NULL;
+    if (lua_istable (L, -1)){
+        envs = (const char *)malloc(asize * sizeof(const char *));
+        lua_pushnil(L);
+        while (lua_next(L, -2) != 0) {
+            lua_pushvalue(L, -2);
+            if (!lua_isstring(L, -2)) { goto l1; };
+            const char * value =  strdup(lua_tostring(L, -2));
+            // stack now contains: -1 => key; -2 => value; -3 => key; -4 => table
+            if (lua_isnumber(L, -1)) {
+                // only value
+                value = strdup(value);
+            } else {
+                // key, value
+                value = concatenateStrings(lua_tostring(L, -1), value);
+            };
+
+            if (asize <= size){
+                asize = asize * 3;
+                envs = (const char *)realloc(envs, asize * sizeof(const char *));
+            }
+            envs[size] = value;
+            size ++;
+            // pop value + copy of key, leaving original key
+            l1:
+            lua_pop(L, 2);
+        }
+        envs[size] = 0;
+        envs = (const char *) realloc(envs, (size+1) * sizeof(const char *));
+    }
+    return envs;
+}
+
 /* popen {arg0, arg1, arg2, ..., [executable=...]} */
 static int superpopen(lua_State *L)
 {
@@ -789,7 +833,7 @@ strings_failure:
     }
 
     luaL_checkstack(L, 12, "cannot grow stack");
-    
+
     /* get executable string */
     lua_getfield(L, 1, "executable");
     s = lua_tostring(L, -1);
@@ -884,6 +928,12 @@ files_failure:
             lua_pop(L, 1);
         }
     }
+
+    lua_getfield(L, 1, "env");
+
+    envs = getEnvs(L);
+
+    lua_pop(L, 1);
 
     result = dopopen(args, executable, fdinfo, close_fds, binary, cwd, proc, pipe_ends, errmsg_buf, 255, envs);
     /*for (i=0; i<3; ++i)

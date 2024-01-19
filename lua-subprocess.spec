@@ -1,8 +1,9 @@
 Name:       lua-subprocess
 Source0:    lua-subprocess.tar.gz
-Release:    2
+Release:    0
 
 BuildRequires: pkgconfig(lua)
+BuildRequires: rpm_macro(lua_libdir)
 BuildRequires: make
 BuildRequires: gcc
 
@@ -35,12 +36,12 @@ BuildArch: noarch
 make
 
 %install
-%{make_install}
+INSTALL_CMD=%{lua_libdir} %{make_install}
 mkdir -p %{buildroot}%{_datadir}/doc/lua-subprocess/
 cp subprocess.html subprocess.txt %{buildroot}%{_datadir}/doc/lua-subprocess/
 
 %files
-%{_libdir}/lua
+%lua_libdir/*
 
 %files doc
 %{_datadir}/doc/lua-subprocess/*
