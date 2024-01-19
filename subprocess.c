@@ -391,7 +391,8 @@ static int dopopen(const char *const *args,  /* program arguments with NULL sent
                    struct proc *proc,        /* populated on success! */
                    FILE *pipe_ends_out[3],   /* pipe ends are put here */
                    char errmsg_out[],        /* written to on failure */
-                   size_t errmsg_len         /* length of errmsg_out (EXCLUDING sentinel) */
+                   size_t errmsg_len,         /* length of errmsg_out (EXCLUDING sentinel) */
+                   const char *const *envs = NULL  /* program environment variables */
                   )
 #if defined(OS_POSIX)
 {
@@ -506,8 +507,11 @@ pipe_failure:
         if (cwd && chdir(cwd)) goto child_failure;
 
         /* exec! Farewell, subprocess.c! */
-        execvp(executable, (char *const*) args); /* XXX: const cast */
-
+        if (envs == NULL){
+            execvp(executable, (char *const*) args); /* XXX: const cast */
+        } else {
+            execvpe(executable, (char *const*) args, (char *const*) envs);
+        }
         /* Oh dear, we're still here. */
 child_failure:
         en = errno;
@@ -729,6 +733,8 @@ static int superpopen(lua_State *L)
     const char **args = NULL;
     /* Command to run (owned by Lua) */
     const char *executable = NULL;
+    /* list of environment arguments (owned by Lua) */
+    const char **envs = NULL;
     /* Directory to run it in (owned by Lua) */
     const char *cwd = NULL;
     /* File options */
@@ -879,7 +885,7 @@ files_failure:
         }
     }
 
-    result = dopopen(args, executable, fdinfo, close_fds, binary, cwd, proc, pipe_ends, errmsg_buf, 255);
+    result = dopopen(args, executable, fdinfo, close_fds, binary, cwd, proc, pipe_ends, errmsg_buf, 255, envs);
     /*for (i=0; i<3; ++i)
         if (fdinfo[i].mode == FDMODE_FILENAME)
             free(fdinfo[i].info.filename);
