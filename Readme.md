@@ -19,7 +19,7 @@ Get package on system
   - Set git clone lua5.4-subprocess
   
   ```css
-  $: git clone https://github.com/trinity-labs/lua5.4-subprocess.git lua5.4-subprocess
+  $: git clone https://github.com/huakim/lua-subprocess.git lua5.4-subprocess
   ```
   
   - Build it !
@@ -54,7 +54,7 @@ Get package on system
   - Set git clone lua5.4-subprocess
   
   ```css
-  $: git clone https://github.com/trinity-labs/lua5.4-subprocess.git lua5.3-subprocess
+  $: git clone https://github.com/huakim/lua-subprocess.git lua5.3-subprocess
   ```
   
   - Build it !
