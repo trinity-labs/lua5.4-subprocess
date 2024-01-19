@@ -1,7 +1,7 @@
 package = "subprocess"
-version = "0.4.0"
+version = "0.4.1"
 source = {
-  url = "git://github.com/trinity-labs/lua5.4-subprocess.git"
+  url = "git://github.com/huakim/lua-subprocess.git"
 }
 description = {
   summary = "Subprocess module for Lua",
