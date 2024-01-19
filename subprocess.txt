@@ -37,7 +37,10 @@ gcc -fPIC -shared -DOS_POSIX -DSHARE_LIOLIB -o subprocess.so \
 ==== subprocess.popen { arg1, arg2, ..., [options...] }
 Creates a child process with the arguments arg1, arg2 etc. Options
 are table items with string keys. The valid options are:
-
+    * `env` - If set as table or array, then these values
+    used as environemnt variables instead default system
+    environment variables. You can set this as empty table,
+    or table with key and values, or only values or mix of all them.
     * `executable` - If set, this is used as the actual executable
     to run, while `arg1` becomes `argv[0]` of the child process.
     If not set, `arg1` is used as the executable name.
