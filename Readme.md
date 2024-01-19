@@ -76,3 +76,5 @@ Get package on system
 <br>
 **Ted Trask** - https://github.com/tdtrask/lua-subprocess - For alpine apk pkg
 <br>
+**Trinity Labs** - https://github.com/tdtrask/lua-subprocess - For README.md and for fix all code to port Lua 5.4 
+<br>
