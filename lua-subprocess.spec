@@ -23,6 +23,7 @@ print(description.detailed);
 
 %package doc
 Summary: Documentary files for lua-subprocess
+BuildArch: noarch
 
 %description doc
 %{summary}.
