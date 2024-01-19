@@ -25,6 +25,9 @@ LUA_CFLAGS := $(shell pkg-config --cflags $(LUA_PACKAGE))
 .PHONY: all
 all: subprocess.so subprocess.html
 
+print-%:
+	@echo $($*)
+
 subprocess.so: $(SOURCES)
 	$(CC) $(CFLAGS) $(LUA_CFLAGS) -DOS_POSIX -DSHARE_LIOLIB -shared -fPIC -o $@ $(SOURCES)
 	

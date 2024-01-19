@@ -1,27 +1,19 @@
 Name:       lua-subprocess
-Source0:    subprocess.rockspec
-Release:    1
+Source0:    lua-subprocess.tar.gz
+Release:    2
+
 BuildRequires: pkgconfig(lua)
 BuildRequires: make
 BuildRequires: gcc
 
 %{lua:
-dofile(rpm.expand('%SOURCE0'));
-print (
-'Version: ' .. version .. "\n" ..
-'URL: ' .. source.url .. "\n" ..
-'Summary: ' .. description.summary .. "\n" ..
-'License: ' .. description.license .. "\n");
-
-sources = build.modules.subprocess.sources;
-l = #sources
-i = 0
-while i < l do
-    i = i + 1;
-    val = sources[i];
-    print('Source' .. i .. ': ' .. val .. "\n");
-end
-
+load(io.popen('tar -axf '..rpm.expand('%{SOURCE0}')..' lua-subprocess/subprocess.rockspec -O'):read('*a'))();
+print(
+'Version: '..version.."\n"..
+'Summary: '..description.summary.."\n"..
+'URL: '..description.homepage.."\n"..
+'License: '..description.license.."\n"
+);
 }
 
 %description
@@ -30,25 +22,13 @@ print(description.detailed);
 }
 
 %prep
-dir=%{_builddir}/lua-subprocess
-mkdir -p "$dir"
-cd "$dir"
-
-%{lua:
-i = 0;
-
-while i < l do
-    i = i + 1;
-    src = rpm.expand('%SOURCE'..i);
-    print('cp '..src..' $dir ;');
-end
-}
+%setup -n lua-subprocess
 
 %build
-%{make_build}
+make
 
 %install
 %{make_install}
 
 %files
-/usr/*
+%{_libdir}/lua

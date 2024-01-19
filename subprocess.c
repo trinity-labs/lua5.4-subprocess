@@ -38,6 +38,7 @@
 #include "fcntl.h"
 #include "assert.h"
 #include "liolib-copy.h"
+#include "signal.h"
 #if defined(OS_POSIX)
 #include "unistd.h"
 #include "sys/wait.h"
