@@ -21,6 +21,12 @@ print(
 print(description.detailed);
 }
 
+%package doc
+Summary: Documentary files for lua-subprocess
+
+%description doc
+%{summary}.
+
 %prep
 %setup -n lua-subprocess
 
@@ -29,6 +35,11 @@ make
 
 %install
 %{make_install}
+mkdir -p %{buildroot}%{_datadir}/doc/lua-subprocess/
+cp subprocess.html subprocess.txt %{buildroot}%{_datadir}/doc/lua-subprocess/
 
 %files
 %{_libdir}/lua
+
+%files doc
+%{_datadir}/doc/lua-subprocess/*
