@@ -39,3 +39,4 @@ args.rockspec = ['text://'+rockspec]
 
 main('rock.rockspec')
 main('generic.spec')
+main('obs.obsinfo')
