@@ -1,5 +1,5 @@
 package = "subprocess"
-version = "0.5.5"
+version = "0.5.5-1"
 source = {
   url = "git://github.com/huakim/lua-subprocess.git"
 }
@@ -11,13 +11,13 @@ description = {
   license = "LGPL"
 }
 dependencies = {
-  "lua >= 5.4"
+  "lua >= 5.1"
 }
 build = {
   type = "builtin",
   modules = {
     ["subprocess"] = {
-      sources = {"subprocess.c", "liolib-copy.c", "liolib-copy.h"},
+      sources = {"subprocess.c", "liolib-copy.c"},
       defines = {"OS_POSIX"}
     }
   }
