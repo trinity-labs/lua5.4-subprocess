@@ -29,9 +29,6 @@ static void luaL_setfuncs (lua_State *l, const luaL_Reg *reg, int nup)
 }
 # define lua_rawlen  lua_objlen
 #else
-#if LUA_VERSION_NUM > 502
-#define LUA_NUMBER_SCAN "%lf"
-#endif
 #define lua_equal(L,idx1,idx2)  lua_compare(L,(idx1),(idx2),LUA_OPEQ)
 #endif
 

@@ -17,8 +17,8 @@ FILE **liolib_copy_newfile(lua_State *L);
 #define lua_setfenv(L,i) (lua_setuservalue((L), (i)))
 /* lua_objlen renamed to lua_rawlen */
 #define lua_objlen(L,i) (lua_rawlen((L), (i)))
-
-#define LUA_NUMBER_SCAN 
+#define luaL_optlong(L, arg, d) (luaL_optinteger((L), (arg), (d)))
+#define LUA_NUMBER_SCAN "%lf"
 #endif
 
 #endif
